@@ -1,0 +1,110 @@
+<div class="space-y-8">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Agentes IA</h1>
+    <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-medium transition-colors" (click)="onNewAgent()">
+      Nuevo agente
+    </button>
+  </div>
+
+  <!-- Search Bar -->
+  <div>
+    <input 
+      type="text" 
+      class="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-neutral-50 focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-100 placeholder-gray-400" 
+      placeholder="Buscar agentes..."
+      (input)="onSearch($event)"
+    >
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-neutral-200">
+        <tr>
+          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">NOMBRE</th>
+          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">TIPO</th>
+          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">ESTADO</th>
+          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">ÚLTIMA MODIFICACIÓN</th>
+          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let agent of paginatedAgents; let i = index" class="border-b border-gray-100 hover:bg-gray-50 transition-colors" [ngClass]="{'bg-neutral-50': i % 2 === 1}">
+          <td class="px-4 py-4 text-gray-800 font-medium">{{ agent.name }}</td>
+          <td class="px-4 py-4 text-gray-600">{{ agent.type }}</td>
+          <td class="px-4 py-4">
+            <span class="px-4 py-1 rounded-full text-sm font-medium" 
+                  [ngClass]="{
+                    'bg-green-100 text-green-800': agent.status === 'Activo',
+                    'bg-neutral-200 text-gray-600': agent.status === 'Inactivo',
+                    'bg-orange-100 text-orange-700': agent.status === 'Borrador'
+                  }">
+              {{ agent.status }}
+            </span>
+          </td>
+          <td class="px-4 py-4 text-gray-500 text-sm">{{ agent.lastModified }}</td>
+          <td class="px-4 py-4">
+            <div class="flex gap-2">
+              <button class="p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded transition-colors" (click)="onEditAgent(agent)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+              <button class="p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded transition-colors" (click)="onDeleteAgent(agent)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3,6 5,6 21,6"></polyline>
+                  <path d="M19,6V20a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  <div class="flex items-center justify-between bg-white px-4 py-3 rounded-2xl shadow-sm" *ngIf="totalPages > 1">
+    <!-- Información de resultados -->
+    <div class="text-sm text-gray-700">
+      Mostrando {{ ((currentPage - 1) * itemsPerPage) + 1 }} a {{ min(currentPage * itemsPerPage, filteredAgents.length) }} de {{ filteredAgents.length }} resultados
+    </div>
+
+    <!-- Controles de paginación -->
+    <div class="flex items-center space-x-1">
+      <!-- Botón anterior -->
+      <button 
+        class="px-4 py-2 text-sm font-medium text-gray-600 bg-neutral-50 rounded-2xl hover:bg-neutral-100 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        [disabled]="currentPage === 1"
+        (click)="previousPage()">
+        Anterior
+      </button>
+
+      <!-- Números de página -->
+      <div class="flex space-x-1 mx-2">
+        <button 
+          *ngFor="let page of pages"
+          class="px-3 py-2 text-sm font-medium rounded-2xl transition-colors"
+          [ngClass]="{
+            'bg-gray-800 text-white': page === currentPage,
+            'text-gray-600 bg-neutral-50 hover:bg-neutral-100 hover:text-gray-800': page !== currentPage
+          }"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+
+      <!-- Botón siguiente -->
+      <button 
+        class="px-4 py-2 text-sm font-medium text-gray-600 bg-neutral-50 rounded-2xl hover:bg-neutral-100 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        [disabled]="currentPage === totalPages"
+        (click)="nextPage()">
+        Siguiente
+      </button>
+    </div>
+  </div>
+</div>
