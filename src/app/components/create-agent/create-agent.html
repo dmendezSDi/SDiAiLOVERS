@@ -70,6 +70,26 @@
     </div>
   </div>
 
+  <!-- Base Model Selection -->
+  <div class="space-y-3 bg-neutral-50 p-6 rounded-2xl shadow-sm">
+    <label for="baseModel" class="block text-sm font-medium text-gray-700">Modelo Base</label>
+    <select 
+      id="baseModel"
+      formControlName="baseModel"
+      class="w-full px-4 py-4 border rounded-2xl bg-white focus:outline-none focus:ring-3 focus:ring-blue-100 transition-all appearance-none cursor-pointer"
+      [class.border-red-300]="isFieldInvalid('baseModel')"
+      [class.border-gray-300]="!isFieldInvalid('baseModel')"
+      [class.focus:border-blue-500]="!isFieldInvalid('baseModel')"
+      [class.focus:border-red-500]="isFieldInvalid('baseModel')"
+      style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 4 5&quot;><path fill=&quot;%23666&quot; d=&quot;M2 0L0 2h4zm0 5L0 3h4z&quot;/></svg>'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 12px;"
+    >
+      <option *ngFor="let model of baseModels" [value]="model.id">{{ model.name }}</option>
+    </select>
+    <div *ngIf="isFieldInvalid('baseModel')" class="text-red-600 text-sm">
+      {{ getFieldError('Modelo Base') }}
+    </div>
+  </div>
+
   <!-- File Upload Section -->
   <div class="space-y-4 bg-neutral-50 p-6 rounded-2xl shadow-sm">
     <label class="block text-sm font-medium text-gray-700">Cargar Datos para Entrenamiento</label>
@@ -154,18 +174,25 @@
     </div>
   </div>
 
+  <!-- Create Error Message -->
+  <div *ngIf="createError" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+    {{ createError }}
+  </div>
+
   <!-- Create Button -->
   <div class="flex justify-end pt-4">
     <button 
       type="submit"
-      [disabled]="agentForm.invalid"
-      class="px-8 py-3 rounded-2xl font-medium transition-all duration-200"
+      [disabled]="agentForm.invalid || isCreating"
+      class="px-8 py-3 rounded-2xl font-medium transition-all duration-200 flex items-center space-x-2"
       [ngClass]="{
-        'bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl': agentForm.valid,
-        'bg-gray-300 text-gray-500 cursor-not-allowed': agentForm.invalid
+        'bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl': agentForm.valid && !isCreating,
+        'bg-blue-500 text-white cursor-not-allowed': isCreating,
+        'bg-gray-300 text-gray-500 cursor-not-allowed': agentForm.invalid && !isCreating
       }"
     >
-      Crear Agente
+      <div *ngIf="isCreating" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+      <span>{{ isCreating ? 'Creando...' : 'Crear Agente' }}</span>
     </button>
   </div>
 </form>
