@@ -4,12 +4,16 @@ Una aplicación web moderna desarrollada con Angular 20+ para la gestión y admi
 
 ## 🚀 Características Principales
 
-- **Gestión de Agentes IA**: Visualización, búsqueda y filtrado de agentes con información detallada
+- **Gestión Completa de Agentes IA**: Visualización, creación, edición, activación/desactivación y eliminación de agentes
 - **Interfaz Moderna**: UI responsiva desarrollada con Tailwind CSS y componentes standalone de Angular
-- **Búsqueda Avanzada**: Filtros por nombre, descripción, modelo y usuario
-- **Paginación Inteligente**: Sistema de paginación con 6 elementos por página
+- **Búsqueda Avanzada**: Filtros por nombre, descripción, modelo y usuario con filtros de estado (activo/inactivo)
+- **Paginación**: Sistema de paginación con 6 elementos por página
 - **Estados Reactivos**: Implementado con Angular Signals para máximo rendimiento
-- **Integración API**: Conexión segura con la API de SDI Lab usando autenticación Bearer
+- **Integración API Completa**: Conexión segura con la API de SDI Lab usando autenticación Bearer
+- **Creación de Agentes**: Formulario completo con validaciones, selección de modelo base y carga de archivos
+- **Gestión de Estados**: Activar/desactivar agentes con confirmación modal
+- **Eliminación Segura**: Confirmación modal para eliminación de agentes
+- **Notificaciones Toast**: Sistema de alertas para feedback de acciones del usuario
 
 ## 🛠️ Stack Tecnológico
 
@@ -26,13 +30,15 @@ Una aplicación web moderna desarrollada con Angular 20+ para la gestión y admi
 src/
 ├── app/
 │   ├── components/             
-│   │   ├── agents-list/       ----> Lista de agentes con paginación y filtros
-│   │   ├── create-agent/      ----> Formulario de creación de agentes
-│   │   └── sidebar-menu/      ----> Menú lateral de navegación
+│   │   ├── agents-list/       ----> Lista de agentes con paginación, filtros y gestión de estado
+│   │   ├── create-agent/      ----> Formulario de creación de agentes con validaciones
+│   │   ├── sidebar-menu/      ----> Menú lateral de navegación
+│   │   ├── confirm-modal/     ----> Modal de confirmación reutilizable
+│   │   └── alert/             ----> Sistema de notificaciones toast
 │   ├── pages/
-│   │   └── home/              ----> Página principal con layout
+│   │   └── home/              ----> Página principal con layout y manejo de eventos
 │   ├── services/
-│   │   └── agents.service.ts  ----> Servicio de gestión de agentes
+│   │   └── agents.service.ts  ----> Servicio completo de gestión de agentes (CRUD)
 │   ├── app.config.ts           
 │   ├── app.routes.ts          ----> Configuración de rutas
 │   └── app.ts                  
