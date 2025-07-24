@@ -7,9 +7,13 @@
     <div class="p-8">
       <div class="max-w-7xl mx-auto">
       @if (currentView() === 'agents') {
-        <app-agents-list (navigate)="onNavigate($event)"></app-agents-list>
+        <app-agents-list 
+          (navigate)="onNavigate($event)" 
+          (agentDeleted)="onAgentDeleted()"
+          (agentStatusChanged)="onAgentStatusChanged($event)">
+        </app-agents-list>
       } @else if (currentView() === 'create') {
-        <app-create-agent (navigate)="onNavigate($event)"></app-create-agent>
+        <app-create-agent (navigate)="onNavigate($event)" (agentCreated)="onAgentCreated()"></app-create-agent>
       } @else {
         <!-- Dashboard Home -->
         <div class="space-y-14">
@@ -123,4 +127,14 @@
       }
     </div>
   </div>
+  
+  <!-- Toast/Alert Component -->
+  @if (showAlert()) {
+    <app-alert 
+      [title]="alertTitle()" 
+      [message]="alertMessage()" 
+      [type]="alertType()"
+      [duration]="4000">
+    </app-alert>
+  }
 </div>
