@@ -91,9 +91,6 @@
     <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
       @if (filteredAgents().length === 0) {
         <div class="p-8 text-center">
-          <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-3-3v6m-9 1V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2z"></path>
-          </svg>
           <h3 class="text-lg font-semibold text-gray-700 mb-2">No se encontraron agentes</h3>
           <p class="text-gray-500">
             @if (searchTerm() || statusFilter() !== 'all') {
@@ -154,14 +151,51 @@
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex justify-end gap-2">
-                    <button class="p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg transition-colors" 
-                            title="Editar agente">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                      </svg>
-                    </button>
+                    <!-- Dropdown de acciones -->
+                    <div class="relative">
+                      <button 
+                        class="p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg transition-colors" 
+                        title="Editar agente"
+                        [attr.data-agent-id]="agent.id"
+                        (click)="toggleDropdown(agent.id)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                      
+                      <!-- Dropdown Menu -->
+                      @if (isDropdownOpen(agent.id)) {
+                        <div class="absolute right-0 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-99"
+                             [ngClass]="getDropdownPositionClass(agent.id)">
+                          <div class="py-1">
+                            <!-- Activar/Desactivar -->
+                            @if (agent.is_active) {
+                              <button 
+                                class="w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                                (click)="openStatusModal(agent, false); closeDropdown()">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Desactivar agente
+                              </button>
+                            } @else {
+                              <button 
+                                class="w-full px-4 py-2 text-left text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
+                                (click)="openStatusModal(agent, true); closeDropdown()">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Activar agente
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    
                     <button class="p-2 text-gray-500 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors" 
-                            title="Eliminar agente">
+                            title="Eliminar agente"
+                            (click)="openDeleteModal(agent)">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                       </svg>
@@ -178,12 +212,7 @@
 
   <!-- Paginación -->
   @if (!loading() && !error() && totalPages() > 1) {
-    <div class="flex items-center justify-between bg-white px-4 py-3 rounded-2xl shadow-sm">
-      <!-- Información de resultados -->
-      <div class="text-sm text-gray-700">
-        {{ ((currentPage() - 1) * itemsPerPage) + 1 }} a {{ min(currentPage() * itemsPerPage, filteredAgents().length) }} de {{ filteredAgents().length }}
-      </div>
-
+    <div class="flex justify-end bg-neutral-50 px-4 py-3 rounded-2xl">
       <!-- Controles de paginación -->
       <div class="flex items-center space-x-1">
         <!-- Botón anterior -->
@@ -200,8 +229,8 @@
             <button 
               class="px-3 py-2 text-sm font-medium rounded-2xl transition-colors"
               [ngClass]="{
-                'bg-gray-800 text-white': page === currentPage(),
-                'text-gray-600 bg-neutral-50 hover:bg-neutral-100 hover:text-gray-800': page !== currentPage()
+                'bg-neutral-200 text-black': page === currentPage(),
+                'text-gray-600 bg-neutral-50 hover:bg-neutral-100 hover:text-neutral-800': page !== currentPage()
               }"
               (click)="goToPage(page)">
               {{ page }}
@@ -220,3 +249,31 @@
     </div>
   }
 </div>
+
+<!-- Modal de confirmación para eliminar -->
+@if (showDeleteModal()) {
+  <app-confirm-modal
+    [isOpen]="showDeleteModal()"
+    title="Eliminar Agente"
+    [message]="getDeleteMessage()"
+    confirmText="Eliminar"
+    cancelText="Cancelar"
+    confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
+    [isLoading]="isDeleting()"
+    (confirmed)="onDeleteConfirmed()"
+    (cancelled)="onDeleteCancelled()" />
+}
+
+<!-- Modal de confirmación para cambio de estado -->
+@if (showStatusModal()) {
+  <app-confirm-modal
+    [isOpen]="showStatusModal()"
+    [title]="targetStatus() ? 'Activar Agente' : 'Desactivar Agente'"
+    [message]="getStatusChangeMessage()"
+    [confirmText]="targetStatus() ? 'Activar' : 'Desactivar'"
+    cancelText="Cancelar"
+    [confirmButtonClass]="targetStatus() ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'"
+    [isLoading]="isChangingStatus()"
+    (confirmed)="onStatusChangeConfirmed()"
+    (cancelled)="onStatusChangeCancelled()" />
+}

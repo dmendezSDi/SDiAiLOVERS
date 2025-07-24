@@ -1,10 +1,11 @@
-import { Component, output, inject, OnInit, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, output, inject, OnInit, computed, signal, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgentsService, Agent } from '../../services/agents.service';
+import { ConfirmModalComponent } from '../confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-agents-list',
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmModalComponent],
   templateUrl: './agents-list.html',
   styleUrl: './agents-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -13,6 +14,8 @@ export class AgentsList implements OnInit {
   private readonly agentsService = inject(AgentsService);
   
   navigate = output<'create'>();
+  agentDeleted = output<void>();
+  agentStatusChanged = output<{ agent: Agent, newStatus: boolean }>();
   
   // Señales reactivas
   protected readonly agents = this.agentsService.agents;
@@ -26,6 +29,21 @@ export class AgentsList implements OnInit {
   // Paginación
   protected readonly currentPage = signal<number>(1);
   protected readonly itemsPerPage = 6;
+
+  // Modal de confirmación para eliminar
+  protected readonly showDeleteModal = signal<boolean>(false);
+  protected readonly agentToDelete = signal<Agent | null>(null);
+  protected readonly isDeleting = signal<boolean>(false);
+  
+  // Modal de confirmación para cambio de estado
+  protected readonly showStatusModal = signal<boolean>(false);
+  protected readonly agentToChangeStatus = signal<Agent | null>(null);
+  protected readonly isChangingStatus = signal<boolean>(false);
+  protected readonly targetStatus = signal<boolean>(true);
+  
+  // Dropdown de acciones
+  protected readonly openDropdownId = signal<string | null>(null);
+  private readonly dropdownPositions = new Map<string, 'up' | 'down'>();
   
   // Agentes filtrados usando computed
   protected readonly filteredAgents = computed(() => {
@@ -163,5 +181,182 @@ export class AgentsList implements OnInit {
 
   protected onCreateAgent(): void {
     this.navigate.emit('create');
+  }
+
+  protected openDeleteModal(agent: Agent) {
+    this.agentToDelete.set(agent);
+    this.showDeleteModal.set(true);
+  }
+
+  protected onDeleteConfirmed() {
+    const agent = this.agentToDelete();
+    if (agent) {
+      this.isDeleting.set(true);
+      this.agentsService.deleteAgent(agent.id).subscribe({
+        next: () => {
+          this.isDeleting.set(false);
+          this.showDeleteModal.set(false);
+          this.agentToDelete.set(null);
+          // Emit success event to parent
+          this.agentDeleted.emit();
+        },
+        error: (error) => {
+          console.error('Error deleting agent:', error);
+          this.isDeleting.set(false);
+          // Here you could emit an error event to show an error toast
+        }
+      });
+    }
+  }
+
+  protected onDeleteCancelled() {
+    this.showDeleteModal.set(false);
+    this.agentToDelete.set(null);
+  }
+
+  protected getDeleteMessage(): string {
+    const agent = this.agentToDelete();
+    return agent 
+      ? `¿Estás seguro de que deseas eliminar el agente "${agent.name}"? Esta acción no se puede deshacer.`
+      : '';
+  }
+
+  protected openStatusModal(agent: Agent, newStatus: boolean) {
+    this.agentToChangeStatus.set(agent);
+    this.targetStatus.set(newStatus);
+    this.showStatusModal.set(true);
+  }
+
+  protected onStatusChangeConfirmed() {
+    const agent = this.agentToChangeStatus();
+    const newStatus = this.targetStatus();
+    
+    if (agent) {
+      this.isChangingStatus.set(true);
+      this.agentsService.updateAgentStatus(agent.id, newStatus).subscribe({
+        next: (updatedAgent) => {
+          this.isChangingStatus.set(false);
+          this.showStatusModal.set(false);
+          this.agentToChangeStatus.set(null);
+          // Emit success event to parent for toast notification
+          this.agentStatusChanged.emit({ agent: updatedAgent, newStatus });
+        },
+        error: (error) => {
+          console.error('Error changing agent status:', error);
+          this.isChangingStatus.set(false);
+          // Here you could emit an error event to show an error toast
+        }
+      });
+    }
+  }
+
+  protected onStatusChangeCancelled() {
+    this.showStatusModal.set(false);
+    this.agentToChangeStatus.set(null);
+  }
+
+  protected getStatusChangeMessage(): string {
+    const agent = this.agentToChangeStatus();
+    const newStatus = this.targetStatus();
+    
+    if (!agent) return '';
+    
+    const action = newStatus ? 'activar' : 'desactivar';
+    const statusText = newStatus ? 'activo' : 'inactivo';
+    
+    return `¿Estás seguro de que deseas ${action} el agente "${agent.name}"? El agente quedará ${statusText}.`;
+  }
+
+  protected toggleDropdown(agentId: string) {
+    if (this.openDropdownId() === agentId) {
+      this.closeDropdown();
+    } else {
+      // Cerrar cualquier dropdown abierto primero
+      this.closeDropdown();
+      // Calcular posición ANTES de abrir el dropdown
+      this.calculateDropdownPositionSync(agentId);
+      // Abrir el nuevo dropdown
+      this.openDropdownId.set(agentId);
+    }
+  }
+
+  protected closeDropdown() {
+    this.openDropdownId.set(null);
+    this.dropdownPositions.clear();
+  }
+
+  protected isDropdownOpen(agentId: string): boolean {
+    return this.openDropdownId() === agentId;
+  }
+
+  private calculateDropdownPositionSync(agentId: string) {
+    const dropdownButton = document.querySelector(`[data-agent-id="${agentId}"]`) as HTMLElement;
+    if (!dropdownButton) {
+      console.log('Dropdown button not found!');
+      return;
+    }
+
+    const rect = dropdownButton.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = 120; // Altura aproximada del dropdown
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // Encontrar la tabla para obtener su contexto
+    const tableElement = dropdownButton.closest('table');
+    let isLastRow = false;
+    let totalRows = 0;
+    let currentRowIndex = -1;
+    
+    if (tableElement) {
+      const rows = tableElement.querySelectorAll('tbody tr');
+      const currentRow = dropdownButton.closest('tr');
+      totalRows = rows.length;
+      
+      if (currentRow && rows.length > 0) {
+        currentRowIndex = Array.from(rows).indexOf(currentRow);
+        // Simplificar: considerar última fila o penúltima si hay espacio muy limitado
+        const isLastTwoRows = currentRowIndex >= totalRows - 2;
+        const hasVeryLimitedSpace = spaceBelow < dropdownHeight * 0.8; // Menos restrictivo
+        isLastRow = isLastTwoRows || hasVeryLimitedSpace;
+      }
+    }
+
+    // Lógica simplificada: priorizar el posicionamiento hacia arriba cuando hay dudas
+    const shouldPositionUp = isLastRow || 
+                            (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) ||
+                            (spaceBelow < dropdownHeight * 1.2 && currentRowIndex >= totalRows - 1); // Última fila con poco espacio
+
+    if (shouldPositionUp) {
+      this.dropdownPositions.set(agentId, 'up');
+    } else {
+      this.dropdownPositions.set(agentId, 'down');
+    }
+    
+  }
+
+  protected getDropdownPositionClass(agentId: string): string {
+    const position = this.dropdownPositions.get(agentId) || 'down';
+    const classes = position === 'up' ? 'bottom-full mb-2' : 'mt-2';
+    
+    return classes;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    
+    // Si el clic es en un botón de dropdown, no cerrar (el toggle se encarga)
+    if (target.closest('[data-agent-id]')) {
+      return;
+    }
+    
+    // Si el clic es dentro del dropdown, no cerrar
+    if (target.closest('.absolute.right-0')) {
+      return;
+    }
+    
+    // Cerrar dropdown en cualquier otro caso
+    this.closeDropdown();
   }
 }
