@@ -1,0 +1,126 @@
+<div class="min-h-screen flex">
+  <!-- Sidebar Fixed -->
+  <app-sidebar-menu [currentView]="currentView()" (navigate)="onNavigate($event)"></app-sidebar-menu>
+  
+  <!-- Main Content with left margin for sidebar -->
+  <div class="flex-1 ml-80 min-h-screen overflow-y-auto">
+    <div class="p-8">
+      <div class="max-w-7xl mx-auto">
+      @if (currentView() === 'agents') {
+        <app-agents-list (navigate)="onNavigate($event)"></app-agents-list>
+      } @else if (currentView() === 'create') {
+        <app-create-agent (navigate)="onNavigate($event)"></app-create-agent>
+      } @else {
+        <!-- Dashboard Home -->
+        <div class="space-y-14">
+          <!-- Header -->
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Bienvenido a Greenfield SL</h1>
+          </div>
+
+          <!-- Statistics Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Agentes IA Activos -->
+            <div class="bg-neutral-100 rounded-lg p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Agentes IA Activos</p>
+                  <p class="text-3xl font-bold text-gray-900">12</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cursos Completados -->
+            <div class="bg-neutral-100 rounded-lg p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Cursos Completados</p>
+                  <p class="text-3xl font-bold text-gray-900">8</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Nuevas Notificaciones -->
+            <div class="bg-neutral-100 rounded-lg p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Nuevas Notificaciones</p>
+                  <p class="text-3xl font-bold text-gray-900">3</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones Rápidas -->
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-10">Acciones Rápidas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <button class="bg-green-100 hover:bg-green-200 text-green-600 font-medium py-10 px-4 rounded-3xl transition-colors duration-200 flex items-center justify-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z"></path>
+                </svg>
+                <span>Explorar Formación</span>
+              </button>
+              
+              <button (click)="onNavigate('agents')" class="bg-green-100 hover:bg-green-200 text-green-600 font-medium py-3 px-4 rounded-3xl transition-colors duration-200 flex items-center justify-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <span>Gestionar Agentes IA</span>
+              </button>
+              
+              <button class="bg-green-100 hover:bg-green-200 text-green-600 font-medium py-3 px-4 rounded-3xl transition-colors duration-200 flex items-center justify-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Acceder a Documentación</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Actividad Reciente -->
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-10">Actividad Reciente</h2>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between bg-neutral-50 p-4 rounded-xl">
+                <div class="flex items-center space-x-4">
+                  <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                  <span class="text-gray-900 font-medium">Has completado el curso 'Introducción a la IA'.</span>
+                </div>
+                <span class="text-sm text-gray-500">Hace 2 horas</span>
+              </div>
+              
+              <div class="flex items-center justify-between bg-neutral-50 p-4 rounded-xl">
+                <div class="flex items-center space-x-4">
+                  <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                  </div>
+                  <span class="text-gray-900 font-medium">Nuevo agente 'Asistente de Marketing' creado.</span>
+                </div>
+                <span class="text-sm text-gray-500">Ayer</span>
+              </div>
+              
+              <div class="flex items-center justify-between bg-neutral-50 p-4 rounded-xl">
+                <div class="flex items-center space-x-4">
+                  <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                  </div>
+                  <span class="text-gray-900 font-medium">Nuevo mensaje en el foro de la comunidad.</span>
+                </div>
+                <span class="text-sm text-gray-500">Hace 3 días</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
