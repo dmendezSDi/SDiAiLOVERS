@@ -1,59 +1,92 @@
-# AILOVERS
+# SDI AI LOVERS - Sistema de Gestión de Agentes IA
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.1.
+Una aplicación web moderna desarrollada con Angular 20+ para la gestión y administración de agentes de inteligencia artificial, construida específicamente para el hackathon de SDI Lab.
 
-## Development server
+## 🚀 Características Principales
 
-To start a local development server, run:
+- **Gestión de Agentes IA**: Visualización, búsqueda y filtrado de agentes con información detallada
+- **Interfaz Moderna**: UI responsiva desarrollada con Tailwind CSS y componentes standalone de Angular
+- **Búsqueda Avanzada**: Filtros por nombre, descripción, modelo y usuario
+- **Paginación Inteligente**: Sistema de paginación con 6 elementos por página
+- **Estados Reactivos**: Implementado con Angular Signals para máximo rendimiento
+- **Integración API**: Conexión segura con la API de SDI Lab usando autenticación Bearer
 
-```bash
-ng serve
+## 🛠️ Stack Tecnológico
+
+- **Framework**: Angular 20.1.0 (última versión)
+- **Lenguaje**: TypeScript 5.8.2
+- **Estilos**: Tailwind CSS 3.4.17
+- **HTTP Client**: Angular HttpClient con interceptores
+- **Estado**: Angular Signals y Computed Properties
+- **Arquitectura**: Standalone Components con OnPush Change Detection
+
+## 📁 Estructura del Proyecto
+
+```
+src/
+├── app/
+│   ├── components/             
+│   │   ├── agents-list/       ----> Lista de agentes con paginación y filtros
+│   │   ├── create-agent/      ----> Formulario de creación de agentes
+│   │   └── sidebar-menu/      ----> Menú lateral de navegación
+│   ├── pages/
+│   │   └── home/              ----> Página principal con layout
+│   ├── services/
+│   │   └── agents.service.ts  ----> Servicio de gestión de agentes
+│   ├── app.config.ts           
+│   ├── app.routes.ts          ----> Configuración de rutas
+│   └── app.ts                  
+├── index.html                  
+├── main.ts                     
+└── styles.css                  
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## 🔧 Instalación y Configuración
 
-## Code scaffolding
+### Prerrequisitos
+- Node.js 18+ 
+- npm o yarn
+- Angular CLI 20+
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Instalación
 
-```bash
-ng generate component component-name
-```
+1. **Clonar el repositorio**
+   ```bash
+   git clone https://github.com/dmendezSDi/SDiAiLOVERS.git
+   cd SDI-AILOVERS
+   ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
 
-```bash
-ng generate --help
-```
+3. **Configurar API Key:**
+   Antes de ejecutar la aplicación, debes configurar tu API Key:
+   
+   - Abre el archivo `src/app/services/agents.service.ts`
+   - Busca la línea: `private readonly API_KEY = '';`
+   - Reemplaza el string vacío con tu API Key de SDI Lab:
+     ```typescript
+     private readonly API_KEY = 'tu-api-key-aqui';
+     ```
+   
+   > **Nota**: Por seguridad, la API Key no está incluida en el repositorio. Contacta al equipo de SDI Lab para obtener las credenciales necesarias.
 
-## Building
+4. **Iniciar el servidor de desarrollo**
+   ```bash
+   npm start
+   # o
+   ng serve
+   ```
 
-To build the project run:
+5. **Abrir en el navegador**
+   Navegar a `http://localhost:4200/`
 
-```bash
-ng build
-```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## 🤝 Contribución
 
-## Running unit tests
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Este proyecto fue desarrollado para el hackathon de SDI Lab.
 
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+---
