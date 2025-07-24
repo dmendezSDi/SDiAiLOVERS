@@ -1,110 +1,222 @@
 <div class="space-y-8">
   <!-- Header -->
   <div class="flex justify-between items-center">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Agentes IA</h1>
-    <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-medium transition-colors" (click)="onNewAgent()">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Agentes IA</h1>
+      @if (stats(); as statsData) {
+        <p class="text-gray-600 mt-1">
+          Total: {{ statsData.total }} | Activos: {{ statsData.active }} | Inactivos: {{ statsData.inactive }}
+        </p>
+      }
+    </div>
+    <button 
+      class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-medium transition-colors" 
+      (click)="onCreateAgent()">
       Nuevo agente
     </button>
   </div>
 
-  <!-- Search Bar -->
-  <div>
-    <input 
-      type="text" 
-      class="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-neutral-50 focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-100 placeholder-gray-400" 
-      placeholder="Buscar agentes..."
-      (input)="onSearch($event)"
-    >
+  <!-- Filters and Search -->
+  <div class="flex gap-4 items-center">
+    <div class="flex-1">
+      <input 
+        type="text" 
+        class="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-neutral-50 focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-100 placeholder-gray-400" 
+        placeholder="Buscar agentes por nombre, descripción, modelo o usuario..."
+        (input)="onSearch($event)"
+        [value]="searchTerm()">
+    </div>
+    
+    <div class="flex gap-2">
+      <button 
+        class="px-4 py-2 rounded-xl font-medium transition-colors"
+        [ngClass]="statusFilter() === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+        (click)="onStatusFilterChange('all')">
+        Todos
+      </button>
+      <button 
+        class="px-4 py-2 rounded-xl font-medium transition-colors"
+        [ngClass]="statusFilter() === 'active' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+        (click)="onStatusFilterChange('active')">
+        Activos
+      </button>
+      <button 
+        class="px-4 py-2 rounded-xl font-medium transition-colors"
+        [ngClass]="statusFilter() === 'inactive' ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+        (click)="onStatusFilterChange('inactive')">
+        Inactivos
+      </button>
+    </div>
+    
+    <button 
+      class="p-3 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
+      (click)="onRefresh()"
+      [disabled]="loading()">
+      <svg class="w-5 h-5" [ngClass]="{'animate-spin': loading()}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+    </button>
   </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="bg-white rounded-2xl shadow-sm p-8 text-center">
+      <div class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+      <p class="text-gray-600">Cargando agentes...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-6">
+      <div class="flex items-center gap-3">
+        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+          <h3 class="text-red-800 font-semibold">Error al cargar agentes</h3>
+          <p class="text-red-600">{{ error() }}</p>
+        </div>
+      </div>
+      <button 
+        class="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition-colors"
+        (click)="onRefresh()">
+        Reintentar
+      </button>
+    </div>
+  }
 
   <!-- Table -->
-  <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-    <table class="w-full">
-      <thead class="bg-neutral-200">
-        <tr>
-          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">NOMBRE</th>
-          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">TIPO</th>
-          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">ESTADO</th>
-          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">ÚLTIMA MODIFICACIÓN</th>
-          <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">ACCIONES</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let agent of paginatedAgents; let i = index" class="border-b border-gray-100 hover:bg-gray-50 transition-colors" [ngClass]="{'bg-neutral-50': i % 2 === 1}">
-          <td class="px-4 py-4 text-gray-800 font-medium">{{ agent.name }}</td>
-          <td class="px-4 py-4 text-gray-600">{{ agent.type }}</td>
-          <td class="px-4 py-4">
-            <span class="px-4 py-1 rounded-full text-sm font-medium" 
-                  [ngClass]="{
-                    'bg-green-100 text-green-800': agent.status === 'Activo',
-                    'bg-neutral-200 text-gray-600': agent.status === 'Inactivo',
-                    'bg-orange-100 text-orange-700': agent.status === 'Borrador'
-                  }">
-              {{ agent.status }}
-            </span>
-          </td>
-          <td class="px-4 py-4 text-gray-500 text-sm">{{ agent.lastModified }}</td>
-          <td class="px-4 py-4">
-            <div class="flex gap-2">
-              <button class="p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded transition-colors" (click)="onEditAgent(agent)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-              </button>
-              <button class="p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded transition-colors" (click)="onDeleteAgent(agent)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3,6 5,6 21,6"></polyline>
-                  <path d="M19,6V20a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  @if (!loading() && !error()) {
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+      @if (filteredAgents().length === 0) {
+        <div class="p-8 text-center">
+          <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-3-3v6m-9 1V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2z"></path>
+          </svg>
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">No se encontraron agentes</h3>
+          <p class="text-gray-500">
+            @if (searchTerm() || statusFilter() !== 'all') {
+              Intenta ajustar los filtros de búsqueda.
+            } @else {
+              Crea tu primer agente para comenzar.
+            }
+          </p>
+        </div>
+      } @else {
+        <table class="w-full">
+          <thead class="bg-neutral-200">
+            <tr>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">NOMBRE</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">MODELO</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">ESTADO</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">MODIFICADO</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">USUARIO</th>
+              <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (agent of paginatedAgents(); track agent.id; let i = $index) {
+              <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" 
+                  [ngClass]="{'bg-neutral-50': i % 2 === 1}">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    @if (agent.meta.profile_image_url && !agent.meta.profile_image_url.includes('/static/favicon.png')) {
+                      <img [src]="agent.meta.profile_image_url" class="w-8 h-8 rounded-full" [alt]="agent.name">
+                    } @else {
+                      <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-blue-600 font-semibold text-sm">{{ agent.name.charAt(0).toUpperCase() }}</span>
+                      </div>
+                    }
+                    <div>
+                      <p class="font-medium text-gray-800">{{ agent.name }}</p>
+                      @if (agent.meta.description) {
+                        <p class="text-sm text-gray-500 truncate max-w-xs">{{ agent.meta.description }}</p>
+                      }
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-gray-600">
+                  <span class="px-2 py-1 bg-gray-100 rounded-md text-sm">{{ getModelType(agent.base_model_id) }}</span>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="px-3 py-1 rounded-full text-sm font-medium" [ngClass]="getStatusClass(agent)">
+                    {{ getAgentStatus(agent) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-gray-500 text-sm">{{ formatDate(agent.updated_at) }}</td>
+                <td class="px-6 py-4 text-gray-600 text-sm">
+                  @if (agent.user) {
+                    {{ agent.user.name }}
+                  } @else {
+                    -
+                  }
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex justify-end gap-2">
+                    <button class="p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg transition-colors" 
+                            title="Editar agente">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </button>
+                    <button class="p-2 text-gray-500 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors" 
+                            title="Eliminar agente">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
 
   <!-- Paginación -->
-  <div class="flex items-center justify-between bg-white px-4 py-3 rounded-2xl shadow-sm" *ngIf="totalPages > 1">
-    <!-- Información de resultados -->
-    <div class="text-sm text-gray-700">
-      Mostrando {{ ((currentPage - 1) * itemsPerPage) + 1 }} a {{ min(currentPage * itemsPerPage, filteredAgents.length) }} de {{ filteredAgents.length }} resultados
-    </div>
-
-    <!-- Controles de paginación -->
-    <div class="flex items-center space-x-1">
-      <!-- Botón anterior -->
-      <button 
-        class="px-4 py-2 text-sm font-medium text-gray-600 bg-neutral-50 rounded-2xl hover:bg-neutral-100 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        [disabled]="currentPage === 1"
-        (click)="previousPage()">
-        Anterior
-      </button>
-
-      <!-- Números de página -->
-      <div class="flex space-x-1 mx-2">
-        <button 
-          *ngFor="let page of pages"
-          class="px-3 py-2 text-sm font-medium rounded-2xl transition-colors"
-          [ngClass]="{
-            'bg-gray-800 text-white': page === currentPage,
-            'text-gray-600 bg-neutral-50 hover:bg-neutral-100 hover:text-gray-800': page !== currentPage
-          }"
-          (click)="goToPage(page)">
-          {{ page }}
-        </button>
+  @if (!loading() && !error() && totalPages() > 1) {
+    <div class="flex items-center justify-between bg-white px-4 py-3 rounded-2xl shadow-sm">
+      <!-- Información de resultados -->
+      <div class="text-sm text-gray-700">
+        {{ ((currentPage() - 1) * itemsPerPage) + 1 }} a {{ min(currentPage() * itemsPerPage, filteredAgents().length) }} de {{ filteredAgents().length }}
       </div>
 
-      <!-- Botón siguiente -->
-      <button 
-        class="px-4 py-2 text-sm font-medium text-gray-600 bg-neutral-50 rounded-2xl hover:bg-neutral-100 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        [disabled]="currentPage === totalPages"
-        (click)="nextPage()">
-        Siguiente
-      </button>
+      <!-- Controles de paginación -->
+      <div class="flex items-center space-x-1">
+        <!-- Botón anterior -->
+        <button 
+          class="px-4 py-2 text-sm font-medium text-gray-600 bg-neutral-50 rounded-2xl hover:bg-neutral-100 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          [disabled]="currentPage() === 1"
+          (click)="previousPage()">
+          Anterior
+        </button>
+
+        <!-- Números de página -->
+        <div class="flex space-x-1 mx-2">
+          @for (page of pages(); track page) {
+            <button 
+              class="px-3 py-2 text-sm font-medium rounded-2xl transition-colors"
+              [ngClass]="{
+                'bg-gray-800 text-white': page === currentPage(),
+                'text-gray-600 bg-neutral-50 hover:bg-neutral-100 hover:text-gray-800': page !== currentPage()
+              }"
+              (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          }
+        </div>
+
+        <!-- Botón siguiente -->
+        <button 
+          class="px-4 py-2 text-sm font-medium text-gray-600 bg-neutral-50 rounded-2xl hover:bg-neutral-100 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          [disabled]="currentPage() === totalPages()"
+          (click)="nextPage()">
+          Siguiente
+        </button>
+      </div>
     </div>
-  </div>
+  }
 </div>
